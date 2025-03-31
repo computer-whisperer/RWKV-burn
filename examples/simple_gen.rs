@@ -7,7 +7,7 @@ use std::sync::Arc;
 use std::time::Instant;
 use burn::module::Module;
 use burn::prelude::{Backend, Device};
-use rwkv::rwkv7::{RWKV7Model, RWKV7Config};
+use rwkv_burn::rwkv7::{RWKV7Model, RWKV7Config};
 
 use burn::record::{FullPrecisionSettings, Recorder};
 use burn_import::pytorch::PyTorchFileRecorder;
@@ -15,8 +15,8 @@ use llm_samplers::prelude::{SampleFreqPresence, SampleGreedy, SampleTemperature,
 use rand::prelude::StdRng;
 use rand::SeedableRng;
 use rwkv_tokenizer::WorldTokenizer;
-use rwkv::context_manager::ContextManager;
-use rwkv::RWKVForward;
+use rwkv_burn::context_manager::ContextManager;
+use rwkv_burn::RWKVForward;
 
 fn main_inner<B>(device: Device<B>)
 where
@@ -34,7 +34,7 @@ where
     sc += SampleFreqPresence::new(0.1, 0.1, 128);
     sc += SampleTemperature::new(1.0);
     sc.push_sampler(SampleGreedy::new());
-    let mut sampler = rwkv::sampling::Sampler::LLMSamplers((sc,
+    let mut sampler = rwkv_burn::sampling::Sampler::LLMSamplers((sc,
                                                         SimpleSamplerResources::new(
                                                             Some(Box::new(StdRng::seed_from_u64(12345))),
                                                             Some(vec![])

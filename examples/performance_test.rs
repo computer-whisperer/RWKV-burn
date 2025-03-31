@@ -5,12 +5,12 @@ use std::sync::Arc;
 use std::time::Instant;
 use burn::module::Module;
 use burn::prelude::{Backend, Device};
-use rwkv::rwkv7::{RWKV7Model, RWKV7Config, RWKVForward};
+use rwkv_burn::rwkv7::{RWKV7Model, RWKV7Config, RWKVForward};
 
 use burn::record::{FullPrecisionSettings, Recorder};
 use burn_import::pytorch::PyTorchFileRecorder;
 use rwkv_tokenizer::WorldTokenizer;
-use rwkv::context_manager::ContextManager;
+use rwkv_burn::context_manager::ContextManager;
 
 fn main_inner<B>(device: Device<B>)
 where

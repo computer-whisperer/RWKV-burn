@@ -6,14 +6,14 @@ use burn::module::Module;
 use burn::optim::{AdamConfig, GradientsParams, Optimizer};
 use burn::prelude::{Backend, Device, Int, Tensor};
 use burn::backend::Autodiff;
-use rwkv::rwkv7::{RWKV7Model, RWKV7Config};
+use rwkv_burn::rwkv7::{RWKV7Model, RWKV7Config};
 
 use burn::record::{FullPrecisionSettings, Recorder};
 use burn::tensor::backend::AutodiffBackend;
 use burn_import::pytorch::PyTorchFileRecorder;
 use rwkv_tokenizer::WorldTokenizer;
-use rwkv::context_manager::ContextManager;
-use rwkv::RWKVForward;
+use rwkv_burn::context_manager::ContextManager;
+use rwkv_burn::RWKVForward;
 
 fn main_inner<B: AutodiffBackend>(device: Device<B>)
 where
