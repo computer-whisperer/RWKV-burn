@@ -1,0 +1,32 @@
+[package]
+name = "rwkv"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+burn = {git="https://github.com/tracel-ai/burn", default-features=false, features=["ndarray", "autodiff"] }
+burn-import = {git="https://github.com/tracel-ai/burn", default-features=false, features=["pytorch"] }
+burn-fusion = {git="https://github.com/tracel-ai/burn", default-features=false }
+burn-autodiff = {git="https://github.com/tracel-ai/burn", default-features=false }
+burn-cubecl = {git="https://github.com/tracel-ai/burn", default-features=false }
+cubecl = {git = "https://github.com/tracel-ai/cubecl", default-features = false, rev = "40aaddc8162f2c2261c4a7b1525a490ee250d37e" }
+
+rand = "0.8.5"
+llm-samplers = "0.0.7"
+rwkv-tokenizer = {git="https://github.com/cahya-wirawan/rwkv-tokenizer.git"}
+half = "2.5.0"
+time="=0.3.39"
+
+[dev-dependencies]
+pyo3 = {version = "0.24.0", features = ["auto-initialize"]}
+
+[features]
+default = ["ndarray"]
+wgpu = ["burn/wgpu"]
+hip = ["burn/hip"]
+cuda = ["burn/cuda"]
+candle = ["burn/candle"]
+vulkan = ["burn/vulkan"]
+fusion = ["burn/fusion"]
+openblas = ["burn/openblas", "ndarray"]
+ndarray = ["burn/openblas"]

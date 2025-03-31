@@ -1,0 +1,3 @@
+[submodule "libs/RWKV-block"]
+	path = libs/RWKV-block
+	url = https://github.com/RWKV/RWKV-block
