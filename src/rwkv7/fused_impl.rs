@@ -46,38 +46,45 @@ for CubeBackend<R, F, I, BT>
         let d_key = state_in.shape().dims[3];
 
         assert_eq!(d_key, d_value);
-
+        assert_eq!(state_in.dtype(), DType::F32);
+        
         let d_tokens = r.shape().dims[1];
 
         assert_eq!(r.dims()[0], d_batch);
         assert_eq!(r.dims()[1], d_tokens);
         assert_eq!(r.dims()[2], n_heads*d_value);
+        assert_eq!(r.dtype(), F::dtype());
 
         assert_eq!(w.dims()[0], d_batch);
         assert_eq!(w.dims()[1], d_tokens);
         assert_eq!(w.dims()[2], n_heads*d_value);
+        assert_eq!(w.dtype(), DType::F32);
 
         assert_eq!(k.dims()[0], d_batch);
         assert_eq!(k.dims()[1], d_tokens);
         assert_eq!(k.dims()[2], n_heads*d_value);
+        assert_eq!(k.dtype(), F::dtype());
 
         assert_eq!(v.dims()[0], d_batch);
         assert_eq!(v.dims()[1], d_tokens);
         assert_eq!(v.dims()[2], n_heads*d_value);
+        assert_eq!(v.dtype(), F::dtype());
 
         assert_eq!(a.dims()[0], d_batch);
         assert_eq!(a.dims()[1], d_tokens);
         assert_eq!(a.dims()[2], n_heads*d_value);
+        assert_eq!(a.dtype(), F::dtype());
 
         assert_eq!(b.dims()[0], d_batch);
         assert_eq!(b.dims()[1], d_tokens);
         assert_eq!(b.dims()[2], n_heads*d_value);
+        assert_eq!(b.dtype(), F::dtype());
 
         let cube_dim = CubeDim { x: d_key as u32, y: 1, z: 1 };
 
-        let state_in = state_in.cast(DType::F32).into_primitive().tensor();
+        let state_in = state_in.into_primitive().tensor();
         let r = into_contiguous(r.into_primitive().tensor());
-        let w = into_contiguous(w.cast(DType::F32).into_primitive().tensor());
+        let w = into_contiguous(w.into_primitive().tensor());
         let k = into_contiguous(k.into_primitive().tensor());
         let v = into_contiguous(v.into_primitive().tensor());
         let a = into_contiguous(a.into_primitive().tensor());
@@ -135,9 +142,13 @@ for CubeBackend<R, F, I, BT>
         assert_eq!(state_out.dims()[1], n_heads);
         assert_eq!(state_out.dims()[2], d_value);
         assert_eq!(state_out.dims()[3], d_key);
+        assert_eq!(state_out.dtype(), DType::F32);
+        
+        
         assert_eq!(y_out.dims()[0], d_batch);
         assert_eq!(y_out.dims()[1], d_tokens);
         assert_eq!(y_out.dims()[2], n_heads*d_value);
+        assert_eq!(y_out.dtype(), F::dtype());
 
         TimeMixOutput {state: state_out, y: y_out}
     }

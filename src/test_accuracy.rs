@@ -33,11 +33,11 @@ where
     };
     println!("Running rust version:");
 
-    let model_path = model_repo.join("temp-latest-training-models/RWKV7-G1-2.9B-32%trained-20250327-ctx4k.pth");
+    //let model_path = model_repo.join("temp-latest-training-models/RWKV7-G1-2.9B-32%trained-20250327-ctx4k.pth");
     //let model_path = model_repo.join("rwkv7-g1/rwkv7-g1-0.1b-20250307-ctx4096.pth");
     //let model_path = model_repo.join("temp-latest-training-models/RWKV7-G1-1.5B-32%trained-20250319-ctx4k.pth");
     //let model_path = model_repo.join("RWKV7-G1-1.5B-16%trained-20250308-ctx4k.pth");
-    //let model_path = model_repo.join("rwkv-7-world/RWKV-x070-World-1.5B-v3-20250127-ctx4096.pth");
+    let model_path = model_repo.join("rwkv-7-world/RWKV-x070-World-1.5B-v3-20250127-ctx4096.pth");
     println!("Loading model {}", model_path.file_stem().unwrap().to_str().unwrap());
 
     
@@ -167,7 +167,7 @@ mod cuda {
 
     pub fn run() {
         let device = CudaDevice::default();
-        main_inner::<Cuda<f32, i32>>(device).unwrap();
+        main_inner::<Cuda<half::bf16, i32>>(device).unwrap();
     }
 }
 

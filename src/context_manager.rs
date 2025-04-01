@@ -241,43 +241,6 @@ where
         self.last_layer_state = Some(new_next_layer_state);
         Ok(())
     }
-
-    pub fn rwkv_fused_forward(&mut self, rwkv: &R) -> Result<(), ContextManagerError> {
-        let (input, input_len) = match std::mem::take(&mut self.unprocessed_tokens) {
-            UnprocessedTokens::Logit(_) => {return Err(ContextManagerError::MissingContextError)}
-            UnprocessedTokens::TokensLocal(tokens) => {
-                let input: Tensor<B, 1, Int> = Tensor::from_ints(&tokens[..], &self.device);
-                (input, tokens.len())
-            }
-            UnprocessedTokens::TokensDevice(tokens) => {
-                let len = tokens.shape().dims[0];
-                (tokens, len)
-            }
-            UnprocessedTokens::None => {return Err(ContextManagerError::MissingContextError)}
-            UnprocessedTokens::Text(text) => {
-                let input_vec = self.tokenizer.encode(&text);
-                let input: Tensor<B, 1, Int> = Tensor::from_ints(&input_vec[..], &self.device);
-                (input, input_vec.len())
-            }
-        };
-
-        let last_layer_state = match &self.last_layer_state{
-            None => None,
-            Some(x) => Some(&x[..])
-        };
-        let (logits, next_layer_state) = rwkv.forward(input.clone().unsqueeze(), last_layer_state);
-        let new_next_layer_state: Vec<R::LayerState> = next_layer_state.into_iter().map(|x| x.detach()).collect();
-        let logits = logits.slice([0..1, (input_len-1)..input_len]).detach();
-        self.processed_tokens = match core::mem::take(&mut self.processed_tokens) {
-            None => {Some(input)}
-            Some(old_tokens) => {
-                Some(Tensor::cat(vec![old_tokens, input], 0))
-            }
-        };
-        self.unprocessed_tokens = UnprocessedTokens::Logit(logits.squeeze::<2>(0).squeeze(0));
-        self.last_layer_state = Some(new_next_layer_state);
-        Ok(())
-    }
     
     pub fn sample_forward(&mut self, rwkv: &R, num_tokens: usize, decode_and_print: bool) -> Result<String, ContextManagerError> {
         let do_pre_forward = match &self.unprocessed_tokens {

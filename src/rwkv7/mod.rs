@@ -195,7 +195,7 @@ impl<B: Backend> LayerState<B> {
         let k = d_model/n_heads;
         let v = k;
         let time_mixer_x_state = Tensor::zeros([batch, d_model], device);
-        let vk_state = Tensor::zeros([batch, n_heads, v, k], device);
+        let vk_state = Tensor::zeros([batch, n_heads, v, k], device).cast(DType::F32);
         let channel_mixer_x_state = Tensor::zeros([batch, d_model], device);
         LayerState {
             time_mixer_x_state,
@@ -305,7 +305,7 @@ use burn::backend::NdArray;
 #[cfg(feature = "ndarray")]
 impl RWKVForward<NdArray> for RWKV7Model<NdArray> {
     type LayerState = LayerState<NdArray>;
-    
+
     fn get_main_dtype(&self) -> DType {
         self.head.weight.dtype()
     }
@@ -321,7 +321,7 @@ impl <B: RWKVFusedBackend>  RWKVForward<B> for RWKV7Model<B> {
     fn get_main_dtype(&self) -> DType {
         self.head.weight.dtype()
     }
-    
+
     fn forward(&self, input: Tensor<B, 2, Int>, channel_states: Option<&[LayerState<B>]>) -> (Tensor<B, 3>, Vec<LayerState<B>>) {
         //self.unfused_forward(input, channel_states)
         self.fused_forward(input, channel_states)
