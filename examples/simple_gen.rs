@@ -140,7 +140,7 @@ mod vulkan {
 
     pub fn run() {
         let device = WgpuDevice::DefaultDevice;
-        main_inner::<Vulkan<f32, i32>>(device);
+        main_inner::<Vulkan<half::f16, i32>>(device);
     }
 }
 

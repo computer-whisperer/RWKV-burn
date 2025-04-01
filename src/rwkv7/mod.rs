@@ -5,7 +5,7 @@ mod fused_impl_kernel;
 use burn::module::{Param};
 use burn::nn::{Linear, LinearConfig, Initializer, LayerNorm, LayerNormConfig, GroupNormConfig, GroupNorm, Tanh, Sigmoid};
 use burn::prelude::{Tensor, Backend};
-use burn::tensor::{Int};
+use burn::tensor::{DType, Int};
 use burn::tensor::module::embedding;
 pub use super::{RWKVForward};
 
@@ -306,6 +306,10 @@ use burn::backend::NdArray;
 impl RWKVForward<NdArray> for RWKV7Model<NdArray> {
     type LayerState = LayerState<NdArray>;
     
+    fn get_main_dtype(&self) -> DType {
+        self.head.weight.dtype()
+    }
+    
     fn forward(&self, input: Tensor<NdArray, 2, Int>, channel_states: Option<&[Self::LayerState]>) -> (Tensor<NdArray, 3>, Vec<Self::LayerState>) {
         self.unfused_forward(input, channel_states)
     }
@@ -313,8 +317,13 @@ impl RWKVForward<NdArray> for RWKV7Model<NdArray> {
 
 impl <B: RWKVFusedBackend>  RWKVForward<B> for RWKV7Model<B> {
     type LayerState = LayerState<B>;
+
+    fn get_main_dtype(&self) -> DType {
+        self.head.weight.dtype()
+    }
     
     fn forward(&self, input: Tensor<B, 2, Int>, channel_states: Option<&[LayerState<B>]>) -> (Tensor<B, 3>, Vec<LayerState<B>>) {
+        //self.unfused_forward(input, channel_states)
         self.fused_forward(input, channel_states)
     }
 }
@@ -344,6 +353,10 @@ where
     Autodiff<B>: Backend
 {
     type LayerState = LayerState<Autodiff<B>>;
+
+    fn get_main_dtype(&self) -> DType {
+        self.head.weight.dtype()
+    }
     
     fn forward(&self, input: Tensor<Autodiff<B>, 2, Int>, channel_states: Option<&[LayerState<Autodiff<B>>]>) -> (Tensor<Autodiff<B>, 3>, Vec<LayerState<Autodiff<B>>>) {
         self.unfused_forward(input, channel_states)

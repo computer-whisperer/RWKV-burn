@@ -30,6 +30,8 @@ pub trait RWKVForward<B: Backend> {
 
         CrossEntropyLoss::new(None, device).forward(testable_logits, expected_values.clone())
     }
+    
+    fn get_main_dtype(&self) -> burn::tensor::DType;
 
 
     fn forward_from_vec(&self, inputs: &[u16], device: &Device<B>, channel_states: Option<&[Self::LayerState]>) -> (Tensor<B, 3>, Vec<Self::LayerState>) {

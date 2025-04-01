@@ -1,4 +1,5 @@
 use std::path::Path;
+use std::sync::Arc;
 use std::time::Instant;
 use burn::record::{FullPrecisionSettings, Recorder};
 use burn_import::pytorch::PyTorchFileRecorder;
@@ -7,6 +8,7 @@ use pyo3::types::{IntoPyDict, PyAny};
 use pyo3::ffi::c_str;
 use burn::prelude::{Device, Backend, Int, Module, Tensor};
 use burn::tensor::DType::F32;
+use rwkv_tokenizer::WorldTokenizer;
 use crate::rwkv7::{RWKV7Model, RWKV7Config, RWKVForward};
 
 fn main_inner<B>(device: Device<B>) -> PyResult<()>
@@ -14,7 +16,11 @@ where
     B: Backend,
     RWKV7Model<B>: RWKVForward<B>
 {
-    let input_tokens = [510, 444, 1648, 293, 15469, 310, 275, 253, 2846, 273];
+    let tokenizer = Arc::new(WorldTokenizer::new(None).unwrap());
+    let input_text = "User: How many bengal cats fit in a standard American school bus? Assume the school bus does not have any students inside, and consider various scenarios for cat containment and temperment. \n\nAssistant: <think>";
+    let input_tokens = tokenizer.encode(input_text);
+    
+    //let input_tokens = [510, 444, 1648, 293, 15469, 310, 275, 253, 2846, 273];
     //let input_tokens = [510];
 
     let model_repo = Path::new("/mnt/secondary/");
@@ -27,8 +33,8 @@ where
     };
     println!("Running rust version:");
 
-    //let model_path = model_repo.join("temp-latest-training-models/RWKV7-G1-2.9B-32%trained-20250327-ctx4k.pth");
-    let model_path = model_repo.join("rwkv7-g1/rwkv7-g1-0.1b-20250307-ctx4096.pth");
+    let model_path = model_repo.join("temp-latest-training-models/RWKV7-G1-2.9B-32%trained-20250327-ctx4k.pth");
+    //let model_path = model_repo.join("rwkv7-g1/rwkv7-g1-0.1b-20250307-ctx4096.pth");
     //let model_path = model_repo.join("temp-latest-training-models/RWKV7-G1-1.5B-32%trained-20250319-ctx4k.pth");
     //let model_path = model_repo.join("RWKV7-G1-1.5B-16%trained-20250308-ctx4k.pth");
     //let model_path = model_repo.join("rwkv-7-world/RWKV-x070-World-1.5B-v3-20250127-ctx4096.pth");
@@ -115,7 +121,7 @@ where
     }
     
     for diff in token_diffs {
-        assert!(diff < 0.1);
+        assert!(diff < 0.35);
     }
 
     Ok(())

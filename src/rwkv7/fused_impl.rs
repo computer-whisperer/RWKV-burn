@@ -27,7 +27,7 @@ pub trait RWKVFusedBackend: burn::tensor::backend::Backend {
 }
 
 /// Implement our custom backend trait for the generic `CubeBackend`.
-impl<R: CubeRuntime, F: FloatElement + Into<f32>, I: IntElement, BT: BoolElement> RWKVFusedBackend
+impl<R: CubeRuntime, F: FloatElement, I: IntElement, BT: BoolElement> RWKVFusedBackend
 for CubeBackend<R, F, I, BT>
 {
     fn fused_time_mix_forward(
@@ -77,7 +77,7 @@ for CubeBackend<R, F, I, BT>
 
         let state_in = state_in.cast(DType::F32).into_primitive().tensor();
         let r = into_contiguous(r.into_primitive().tensor());
-        let w = into_contiguous(w.into_primitive().tensor());
+        let w = into_contiguous(w.cast(DType::F32).into_primitive().tensor());
         let k = into_contiguous(k.into_primitive().tensor());
         let v = into_contiguous(v.into_primitive().tensor());
         let a = into_contiguous(a.into_primitive().tensor());
@@ -104,8 +104,8 @@ for CubeBackend<R, F, I, BT>
         );
 
         let config = TimeMixKernelConfig{
-            H: n_heads as u32,
-            C: d_key as u32
+            n_heads: n_heads as u32,
+            d_key_value: d_key as u32
         };
 
         let cube_count = CubeCount::Static(
@@ -119,7 +119,7 @@ for CubeBackend<R, F, I, BT>
             state_in.as_tensor_arg::<f32>(1),
             state_out.as_tensor_arg::<f32>(1),
             r.as_tensor_arg::<F>(1),
-            w.as_tensor_arg::<F>(1),
+            w.as_tensor_arg::<f32>(1),
             k.as_tensor_arg::<F>(1),
             v.as_tensor_arg::<F>(1),
             a.as_tensor_arg::<F>(1),
