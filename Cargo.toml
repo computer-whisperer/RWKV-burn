@@ -8,8 +8,9 @@ burn = {git="https://github.com/tracel-ai/burn", default-features=false, feature
 burn-import = {git="https://github.com/tracel-ai/burn", default-features=false, features=["pytorch"] }
 burn-fusion = {git="https://github.com/tracel-ai/burn", default-features=false }
 burn-autodiff = {git="https://github.com/tracel-ai/burn", default-features=false }
+burn-ir = {git="https://github.com/tracel-ai/burn", default-features=false }
 burn-cubecl = {git="https://github.com/tracel-ai/burn", default-features=false }
-cubecl = {git = "https://github.com/tracel-ai/cubecl", default-features = false, rev = "40aaddc8162f2c2261c4a7b1525a490ee250d37e" }
+cubecl = {git = "https://github.com/tracel-ai/cubecl", default-features = false, rev = "5c7fcfcab2c8a994af88dcb571173709a2d47a51" }
 
 rand = "0.8.5"
 llm-samplers = "0.0.7"

@@ -3,7 +3,7 @@ mod fused_impl;
 mod fused_impl_kernel;
 
 use burn::module::{Param};
-use burn::nn::{Linear, LinearConfig, Initializer, LayerNorm, LayerNormConfig, GroupNormConfig, GroupNorm, Tanh, Sigmoid};
+use burn::nn::{Linear, LinearConfig, Initializer, LayerNorm, LayerNormConfig, GroupNormConfig, GroupNorm};
 use burn::prelude::{Tensor, Backend};
 use burn::tensor::{DType, Int};
 use burn::tensor::module::embedding;
@@ -328,21 +328,6 @@ impl <B: RWKVFusedBackend>  RWKVForward<B> for RWKV7Model<B> {
     }
 }
 
-#[cfg(feature = "fusion")]
-use burn_fusion::{Fusion, FusionBackend};
-
-#[cfg(feature = "fusion")]
-impl <B: Backend>  RWKVForward<Fusion<B>> for RWKV7Model<Fusion<B>>
-where
-    Fusion<B>: Backend,
-    B: FusionBackend
-{
-    type LayerState = LayerState<Fusion<B>>;
-    
-    fn forward(&self, input: Tensor<Fusion<B>, 2, Int>, channel_states: Option<&[Self::LayerState]>) -> (Tensor<Fusion<B>, 3>, Vec<Self::LayerState>) {
-        self.unfused_forward(input, channel_states)
-    }
-}
 
 use burn_autodiff::{Autodiff};
 use crate::rwkv7::fused_impl::RWKVFusedBackend;
@@ -363,53 +348,3 @@ where
     }
 }
 
-fn lerp<B: Backend, const D: usize>(start: Tensor<B, D>, end: Tensor<B, D>, weight: Tensor<B, D>) -> Tensor<B, D> {
-    start.clone() + weight * ( end - start)
-}
-
-fn lora_forward<B: Backend, const D: usize>(l1: Tensor<B, 2>, l2: Tensor<B, 2>, base: Option<Tensor<B, D>>, x: Tensor<B, D>) -> Tensor<B, D> {
-    let x1 = x.matmul(l1.unsqueeze());
-    let x = x1.matmul(l2.unsqueeze());
-    if let Some(base) = base {
-        x + base
-    } else {
-        x
-    }
-}
-
-fn lora_forward_sigmoid<B: Backend, const D: usize>(l1: Tensor<B, 2>, l2: Tensor<B, 2>, base: Option<Tensor<B, D>>, x: Tensor<B, D>) -> Tensor<B, D> {
-    let x = x.matmul(l1.unsqueeze());
-    let activation = Sigmoid::new();
-    let x = activation.forward(x).matmul(l2.unsqueeze());
-    if let Some(base) = base {
-        x + base
-    } else {
-        x
-    }
-}
-
-fn lora_forward_tanh<B: Backend, const D: usize>(l1: Tensor<B, 2>, l2: Tensor<B, 2>, base: Option<Tensor<B, D>>, x: Tensor<B, D>) -> Tensor<B, D> {
-    let x = x.matmul(l1.unsqueeze());
-    let activation = Tanh::new();
-    let x = activation.forward(x).matmul(l2.unsqueeze());
-    if let Some(base) = base {
-        x + base
-    } else {
-        x
-    }
-}
-
-fn inner_norm<B: Backend, const D: usize>(x: Tensor<B, D>, dim: usize, p: f32) -> Tensor<B, D> {
-    x.abs().powf_scalar(p).sum_dim(dim).powf_scalar(1./p)
-}
-
-fn normalize<B: Backend, const D: usize>(x: Tensor<B, D>, dim: usize, p: f32) -> Tensor<B, D> {
-    // In python:
-    /*
-     eps = 1e-12
-     denom = input.norm(p, dim, keepdim=True).clamp_min(eps).expand_as(input)
-     return input / denom
-     */
-    let denom = inner_norm(x.clone(), dim, p).clamp_min(1e-12);
-    x / denom
-}

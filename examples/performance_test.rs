@@ -43,7 +43,7 @@ where
     let prompt = "User: How many cats will fit in your average school bus?\n\nAssistant: <think>\nAlright";
     context_manager.add_text(prompt).unwrap();
 
-    print!("Processing prompt: \n{}", prompt);
+    println!("Processing prompt: \n{}", prompt);
 
     context_manager.rwkv_forward(&rwkv).unwrap();
     // Warm up
@@ -51,14 +51,17 @@ where
         context_manager.greedy_sample().unwrap();
         context_manager.rwkv_forward(&rwkv).unwrap();
     }
+    B::sync(&device);
+    println!("Warm up complete.");
     let mut context_manager = ContextManager::new(tokenizer.clone(), None, device.clone());
-    println!("Warm up complete. Running prefill");
-    let prefill_tokens = [100; 5000];
-    let prefill_start = Instant::now();
-    context_manager.add_tokens(&prefill_tokens);
-    context_manager.rwkv_forward(&rwkv).unwrap();
-    
-    println!("Prefill complete: {}tps", prefill_tokens.len() as f32/(Instant::now() - prefill_start).as_secs_f32());
+    if true {
+        let prefill_tokens = [100; 5000];
+        let prefill_start = Instant::now();
+        context_manager.add_tokens(&prefill_tokens);
+        context_manager.rwkv_forward(&rwkv).unwrap();
+        B::sync(&device);
+        println!("Prefill complete: {}tps", prefill_tokens.len() as f32/(Instant::now() - prefill_start).as_secs_f32());
+    }
 
     let forward_start = Instant::now();
     let n_forward = 1000;
@@ -67,6 +70,7 @@ where
         context_manager.add_tokens(&[100]);
         context_manager.rwkv_forward(&rwkv).unwrap();
     }
+    B::sync(&device);
 
     println!("Forward complete: {}tps", n_forward as f32/(Instant::now() - forward_start).as_secs_f32());
 

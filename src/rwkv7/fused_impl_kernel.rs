@@ -6,7 +6,6 @@ pub(crate) struct TimeMixKernelConfig {
     pub d_key_value: u32
 }
 
-
 #[cube(launch)]
 pub fn fused_time_mix_forward<F: Float>(
     state_in: &Tensor<f32>,
@@ -47,8 +46,8 @@ pub fn fused_time_mix_forward<F: Float>(
         //w[i] = Exp::exp(-Exp::exp(f32::cast_from(w_in[ind])));
         w[i] = Exp::exp(-Exp::exp(w_in[ind]));
         k[i] = f32::cast_from(k_in[ind]);
-        a[i] = f32::cast_from(a_in[ind]);
-        b[i] = f32::cast_from(b_in[ind]);
+        a[i] = f32::cast_from(-a_in[ind]);
+        b[i] = f32::cast_from(a_in[ind]*b_in[ind]);
         sync_units();
 
         let mut sa = 0.0f32;

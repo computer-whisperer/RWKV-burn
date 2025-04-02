@@ -39,13 +39,14 @@ where
     //let model_path = model_repo.join("RWKV7-G1-1.5B-16%trained-20250308-ctx4k.pth");
     let model_path = model_repo.join("rwkv-7-world/RWKV-x070-World-1.5B-v3-20250127-ctx4096.pth");
     println!("Loading model {}", model_path.file_stem().unwrap().to_str().unwrap());
-
+    let load_start = Instant::now();
     
     let input: Tensor<B, 1, Int> = Tensor::from_ints(&input_tokens[..], &device);
 
     let record = PyTorchFileRecorder::<FullPrecisionSettings>::new().load(model_path.clone().into(), &device).unwrap();
     let rwkv = RWKV7Model::<B>::new(RWKV7Config::from_record(&record), &device);
     let rwkv = rwkv.load_record(record);
+    println!("Loaded {:?} in {:?}", rwkv.get_main_dtype(), Instant::now() - load_start);
 
     println!("Model loaded:");
     let start_time = Instant::now();

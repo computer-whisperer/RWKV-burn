@@ -1,9 +1,59 @@
-use burn::nn::{Sigmoid};
+use burn::nn::{Sigmoid, Tanh};
 use burn::prelude::{Backend, Tensor};
 use burn::tensor::activation::{relu, sigmoid, softplus};
 use burn::tensor::DType;
-use crate::rwkv7::{Block, ChannelMixer, LayerState, TimeMixer, RWKV7Model, lerp, lora_forward_sigmoid, lora_forward_tanh, normalize, lora_forward};
+use crate::rwkv7::{Block, ChannelMixer, LayerState, TimeMixer, RWKV7Model};
 
+fn lerp<B: Backend, const D: usize>(start: Tensor<B, D>, end: Tensor<B, D>, weight: Tensor<B, D>) -> Tensor<B, D> {
+    start.clone() + weight * ( end - start)
+}
+
+fn lora_forward<B: Backend, const D: usize>(l1: Tensor<B, 2>, l2: Tensor<B, 2>, base: Option<Tensor<B, D>>, x: Tensor<B, D>) -> Tensor<B, D> {
+    let x1 = x.matmul(l1.unsqueeze());
+    let x = x1.matmul(l2.unsqueeze());
+    if let Some(base) = base {
+        x + base
+    } else {
+        x
+    }
+}
+
+fn lora_forward_sigmoid<B: Backend, const D: usize>(l1: Tensor<B, 2>, l2: Tensor<B, 2>, base: Option<Tensor<B, D>>, x: Tensor<B, D>) -> Tensor<B, D> {
+    let x = x.matmul(l1.unsqueeze());
+    let activation = Sigmoid::new();
+    let x = activation.forward(x).matmul(l2.unsqueeze());
+    if let Some(base) = base {
+        x + base
+    } else {
+        x
+    }
+}
+
+fn lora_forward_tanh<B: Backend, const D: usize>(l1: Tensor<B, 2>, l2: Tensor<B, 2>, base: Option<Tensor<B, D>>, x: Tensor<B, D>) -> Tensor<B, D> {
+    let x = x.matmul(l1.unsqueeze());
+    let activation = Tanh::new();
+    let x = activation.forward(x).matmul(l2.unsqueeze());
+    if let Some(base) = base {
+        x + base
+    } else {
+        x
+    }
+}
+
+fn inner_norm<B: Backend, const D: usize>(x: Tensor<B, D>, dim: usize, p: f32) -> Tensor<B, D> {
+    x.abs().powf_scalar(p).sum_dim(dim).powf_scalar(1./p)
+}
+
+fn normalize<B: Backend, const D: usize>(x: Tensor<B, D>, dim: usize, p: f32) -> Tensor<B, D> {
+    // In python:
+    /*
+     eps = 1e-12
+     denom = input.norm(p, dim, keepdim=True).clamp_min(eps).expand_as(input)
+     return input / denom
+     */
+    let denom = inner_norm(x.clone(), dim, p).clamp_min(1e-12);
+    x / denom
+}
 
 impl <B: Backend> TimeMixer<B> {
     pub(crate) fn unfused_forward(&self, hidden_state_in: Tensor<B, 3>, v0: Option<Tensor<B, 3>>, time_mixer_x_state: Tensor<B, 2>, vk_state: Tensor<B, 4>, d_model: usize, n_heads: usize) -> (Tensor<B, 3>, Tensor<B, 3>, Tensor<B, 4>) {
